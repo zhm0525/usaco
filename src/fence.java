@@ -12,6 +12,10 @@ public class fence {
     private static final String INPUT_FILE_NAME = "fence.in";
     private static final String OUTPUT_FILE_NAME = "fence.out";
 
+    private static int[][] a = new int[501][501];
+    private static int[] s;
+    private static int index;
+
     public static void main(String[] args) throws IOException {
         BufferedReader f = new BufferedReader(new FileReader(INPUT_FILE_NAME));
         PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(OUTPUT_FILE_NAME)));
@@ -19,7 +23,6 @@ public class fence {
         StringTokenizer st = new StringTokenizer(f.readLine());
         int m = Integer.parseInt(st.nextToken());
 
-        int[][] a = new int[501][501];
         int[] d = new int[501];
         for (int i = 0; i < m; i++) {
             st = new StringTokenizer(f.readLine());
@@ -41,44 +44,25 @@ public class fence {
             }
         }
 
-        int[] s = new int[501];
-        s[0] = start;
-        int index = 1;
+        s = new int[m + 1];
+        index = 0;
+        search(start);
 
-        while (0 < index && index <= m) {
-            if (s[index] > 0) {
-                a[s[index - 1]][s[index]]++;
-                a[s[index]][s[index - 1]]++;
-            }
-            s[index]++;
 
-            while ((s[index] < 501) && (a[s[index - 1]][s[index]] <= 0)) {
-                s[index]++;
-            }
-            if (s[index] >= 501) {
-                s[index] = 0;
-                index--;
-            } else {
-                a[s[index - 1]][s[index]]--;
-                a[s[index]][s[index - 1]]--;
-                index++;
-            }
-
-        }
-
-//        for (int i = 0; i <= m; i++) {
-//            for (int j = 1; j < 501; j++) {
-//                if (a[index][j] > 0) {
-//                    a[index][j]--;
-//                    a[j][index]--;
-//                    index = j;
-//                    break;
-//                }
-//            }
-//        }
-        for (int i = 0; i <= m; i++) {
+        for (int i = m; i >= 0; i--) {
             out.println(String.valueOf(s[i]));
         }
         out.close();
+    }
+
+    private static void search(int x) {
+        for (int i = 1; i < 501; i++) {
+            if (a[x][i] > 0) {
+                a[x][i]--;
+                a[i][x]--;
+                search(i);
+            }
+        }
+        s[index++] = x;
     }
 }
