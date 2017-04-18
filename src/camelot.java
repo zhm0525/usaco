@@ -14,6 +14,7 @@ public class camelot {
 
     private static final int[][] KING_DIRECTIONS = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
     private static final int[][] KNIGHT_DIRECTIONS = {{-2, -1}, {-2, 1}, {-1, -2}, {-1, 2}, {1, -2}, {1, 2}, {2, -1}, {2, 1}};
+    private static final int MAX_VALUE = Integer.MAX_VALUE / 4;
 
     public static void main(String[] args) throws IOException {
         BufferedReader f = new BufferedReader(new FileReader(INPUT_FILE_NAME));
@@ -44,24 +45,73 @@ public class camelot {
             }
         }
 
-        int s = Integer.MAX_VALUE;
+        Position kingPosition = list.get(0);
+        int minKing2Knight = MAX_VALUE;
+        for (int i = 1, size = list.size(); i < size; i++) {
+            Position knightPosition = list.get(i);
+            int t = kingSP[kingPosition.getX()][kingPosition.getY()]
+                    [knightPosition.getX()][knightPosition.getY()];
+            if (t < minKing2Knight) {
+                minKing2Knight = t;
+            }
+        }
+
+        List<Position> catchKingPositions = new ArrayList<>();
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (kingSP[kingPosition.getX()][kingPosition.getY()][i][j] < minKing2Knight) {
+                    catchKingPositions.add(new Position(i, j));
+                }
+            }
+        }
+
+        int s = MAX_VALUE;
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
                 // (i,j) gather point
-                for (int x = 0; x < m; x++) {
-                    for (int y = 0; y < m; y++) {
-                        // (x,y) point for one knight catch king
-                        for (int k = 0, size = list.size(); k < size; k++) {
-                            // k knight catch the king, k == 0 for king walk self
-                            int t = 0;
+                boolean flag = true;
+                int t = 0;
+                for (int k = 1, size = list.size(); k < size; k++) {
+                    Position knightPosition = list.get(k);
+                    if (knightSP[knightPosition.getX()][knightPosition.getY()][i][j] == MAX_VALUE) {
+                        flag = false;
+                        break;
+                    }
+                    t = t + knightSP[knightPosition.getX()][knightPosition.getY()][i][j];
+                }
+                if (!flag) {
+                    continue;
+                }
 
+                if (t + minKing2Knight < s) {
+                    s = t + minKing2Knight;
+                }
+                if (t + kingSP[kingPosition.getX()][kingPosition.getY()][i][j] < s) {
+                    s = t + kingSP[kingPosition.getX()][kingPosition.getY()][i][j];
+                }
+                if (minKing2Knight == 0 || t > s) {
+                    continue;
+                }
 
-                            if (t < s) {
-                                s = t;
-                            }
+                for (Position catchKingPosition : catchKingPositions) {
+                    int x = catchKingPosition.getX();
+                    int y = catchKingPosition.getY();
+
+                    for (int k = 1, size = list.size(); k < size; k++) {
+                        // k knight catch the king
+                        int r = t;
+                        Position knightPosition = list.get(k);
+                        r = r - knightSP[knightPosition.getX()][knightPosition.getY()][i][j];
+                        r = r + kingSP[kingPosition.getX()][kingPosition.getY()][x][y] +
+                                knightSP[knightPosition.getX()][knightPosition.getY()][x][y] +
+                                knightSP[x][y][i][j];
+
+                        if (r < s) {
+                            s = r;
                         }
                     }
                 }
+
             }
         }
         out.println(String.valueOf(s));
@@ -72,7 +122,7 @@ public class camelot {
         int[][] map = new int[m][n];
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
-                map[i][j] = Integer.MAX_VALUE;
+                map[i][j] = MAX_VALUE;
             }
         }
         map[position.getX()][position.getY()] = 0;
@@ -81,11 +131,16 @@ public class camelot {
         int index = 0;
         while (index < list.size()) {
             Position currentPosition = list.get(index);
-            List<Position> nextPositions = currentPosition.getNextPositions(directions, m, n);
-            for (Position p : nextPositions) {
-                if (map[p.getX()][p.getY()] >= Integer.MAX_VALUE) {
-                    map[p.getX()][p.getY()] = map[currentPosition.getX()][currentPosition.getY()] + 1;
-                    list.add(p);
+            int x = currentPosition.getX();
+            int y = currentPosition.getY();
+            for (int i = 0; i < directions.length; i++) {
+                int xt = x + directions[i][0];
+                int yt = y + directions[i][1];
+                if (0 <= xt && xt < m && 0 <= yt && yt < n) {
+                    if (map[xt][yt] >= MAX_VALUE) {
+                        map[xt][yt] = map[currentPosition.getX()][currentPosition.getY()] + 1;
+                        list.add(new Position(xt, yt));
+                    }
                 }
             }
             index++;
@@ -108,18 +163,6 @@ public class camelot {
 
         public int getY() {
             return y;
-        }
-
-        public List<Position> getNextPositions(int[][] directions, int m, int n) {
-            List<Position> list = new ArrayList<>();
-            for (int i = 0; i < directions.length; i++) {
-                int xt = x + directions[i][0];
-                int yt = y + directions[i][1];
-                if (0 <= xt && xt < m && 0 <= yt && yt < n) {
-                    list.add(new Position(xt, yt));
-                }
-            }
-            return list;
         }
 
     }
