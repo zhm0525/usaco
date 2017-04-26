@@ -12,7 +12,12 @@ public class frameup {
     private static final String INPUT_FILE_NAME = "frameup.in";
     private static final String OUTPUT_FILE_NAME = "frameup.out";
 
+    private static final int LETTER_COUNT = 26;
+
+    private static boolean[] mLetterUsed = new boolean[LETTER_COUNT];
     private static List<Frame> mFrames = new ArrayList<>();
+    private static char[] mTempResult;
+    private static List<String> mResults;
 
     public static void main(String[] args) throws IOException {
         BufferedReader f = new BufferedReader(new FileReader(INPUT_FILE_NAME));
@@ -22,21 +27,33 @@ public class frameup {
         int m = Integer.parseInt(st.nextToken());
         int n = Integer.parseInt(st.nextToken());
 
-        String[] map = new String[m];
+        char[][] map = new char[m][n];
         for (int i = 0; i < m; i++) {
-            map[i] = f.readLine();
+            String input = f.readLine();
             // assert the length of map[i] is n;
             for (int j = 0; j < n; j++) {
-                if (map[i].charAt(j) == '.') {
-                    continue;
+                map[i][j] = input.charAt(j);
+            }
+        }
+
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (map[i][j] != '.') {
+                    char letter = map[i][j];
+                    mLetterUsed[letter - 'A'] = true;
+                    Frame curFrame = null;
+                    for (Frame frame : mFrames) {
+                        if (frame.getLetter() == letter) {
+                            curFrame = frame;
+                            break;
+                        }
+                    }
+                    if (curFrame == null) {
+                        curFrame = new Frame(letter);
+                        mFrames.add(curFrame);
+                    }
+                    curFrame.set(i, j);
                 }
-                int id = map[i].charAt(j);
-                Frame curFrame = getFrame(id);
-                if (curFrame == null) {
-                    curFrame = new Frame(id);
-                    mFrames.add(curFrame);
-                }
-                curFrame.set(i, j);
             }
         }
 
@@ -48,78 +65,65 @@ public class frameup {
             int y2 = xy[3];
             for (int i = x1; i <= x2; i++) {
                 // (i, y1), (i, y2)
-                cover(frame, map[i].charAt(y1));
-                cover(frame, map[i].charAt(y2));
+                frame.addCovered(map[i][y1]);
+                frame.addCovered(map[i][y2]);
             }
 
             for (int i = y1; i <= y2; i++) {
                 // (x1, i), (x2, i)
-                cover(frame, map[x1].charAt(i));
-                cover(frame, map[x2].charAt(i));
+                frame.addCovered(map[x1][i]);
+                frame.addCovered(map[x2][i]);
             }
         }
 
-        Collections.sort(mFrames);
+        mTempResult = new char[mFrames.size()];
+        mResults = new ArrayList<>();
+        search(0);
 
-        List<Frame> mChosenFrames = new ArrayList<>();
-        for (int i = 0, size = mFrames.size(); i < size; i++) {
-            Frame choseFrame = null;
-            for (Frame frame : mFrames) {
-                if (mChosenFrames.contains(frame)) {
-                    continue;
-                }
-                if (!frame.isCovered(mChosenFrames)) {
-                    choseFrame = frame;
-                    break;
-                }
-            }
-            mChosenFrames.add(choseFrame);
+        Collections.sort(mResults);
+        for (String result : mResults) {
+            out.println(result);
         }
-
-        for (int i = mChosenFrames.size() - 1; i >= 0; i--) {
-            out.print((char) (mChosenFrames.get(i).getId()));
-        }
-        out.println();
         out.close();
     }
 
-    private static Frame getFrame(int id) {
-        for (Frame frame : mFrames) {
-            if (frame.getId() == id) {
-                return frame;
+    private static void search(int index) {
+        if (index >= mFrames.size()) {
+            StringBuffer stringBuffer = new StringBuffer();
+            for (int i = mFrames.size() - 1; i >= 0; i--) {
+                stringBuffer.append(mTempResult[i]);
+            }
+            mResults.add(stringBuffer.toString());
+        } else {
+            for (Frame frame : mFrames) {
+                if (mLetterUsed[frame.getLetter() - 'A'] &&
+                        !frame.isCovered(mLetterUsed)) {
+                    char letter = frame.getLetter();
+                    mTempResult[index] = letter;
+                    mLetterUsed[letter - 'A'] = false;
+                    search(index + 1);
+                    mLetterUsed[letter - 'A'] = true;
+                }
             }
         }
-        return null;
     }
 
-    private static void cover(Frame frame, char c) {
-        if (c == '.') {
-            return;
-        }
-        int id = (int) c;
-        if (id != frame.getId()) {
-            frame.addCovered(getFrame(id));
-        }
-    }
-
-    private static class Frame implements Comparable<Frame> {
-        private int id; // convert from the char
+    private static class Frame {
+        private char mLetter;
         private int x1, x2, y1, y2; //x1<x2, y1<y2
+        private boolean[] mCovered;
 
-        private List<Frame> mCoveredFrames;
-
-        public Frame(int id) {
-            this.id = id;
+        public Frame(char letter) {
+            mLetter = letter;
             x1 = Integer.MAX_VALUE;
             x2 = -Integer.MAX_VALUE;
             y1 = Integer.MAX_VALUE;
             y2 = -Integer.MAX_VALUE;
-
-            mCoveredFrames = new ArrayList<>();
+            mCovered = new boolean[LETTER_COUNT];
         }
 
-        public int getId() {
-            return id;
+        public char getLetter() {
+            return mLetter;
         }
 
         public void set(int x, int y) {
@@ -141,32 +145,28 @@ public class frameup {
             return new int[]{x1, x2, y1, y2};
         }
 
-        public void addCovered(Frame frame) {
-            mCoveredFrames.add(frame);
+        public void addCovered(char letter) {
+            addCovered(letter - 'A');
         }
 
-        public void removeCovered(Frame frame) {
-            mCoveredFrames.remove(frame);
+        public void addCovered(int letterIndex) {
+            if (letterIndex < 0 || letterIndex >= LETTER_COUNT) {
+                return;
+            } else if (mLetter - 'A' == letterIndex) {
+                return;
+            }
+            mCovered[letterIndex] = true;
         }
 
-        public boolean isCovered(List<Frame> excepts) {
-            for (Frame coveredFrame : mCoveredFrames) {
-                if (!excepts.contains(coveredFrame)) {
+        public boolean isCovered(boolean[] availables) {
+            for (int i = 0; i < LETTER_COUNT; i++) {
+                if (mCovered[i] && availables[i]) {
                     return true;
                 }
             }
             return false;
         }
 
-        @Override
-        public int compareTo(Frame frame) {
-            if (id > frame.getId()) {
-                return -1;
-            } else if (id < frame.getId()) {
-                return 1;
-            }
-            return 0;
-        }
     }
 
 }
