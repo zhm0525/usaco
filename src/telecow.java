@@ -11,6 +11,7 @@ public class telecow {
 
     private static final String INPUT_FILE_NAME = "telecow.in";
     private static final String OUTPUT_FILE_NAME = "telecow.out";
+    private static final int MAX = Integer.MAX_VALUE / 2;
 
     public static void main(String[] args) throws IOException {
         BufferedReader f = new BufferedReader(new FileReader(INPUT_FILE_NAME));
@@ -22,22 +23,28 @@ public class telecow {
         int s = Integer.parseInt(st.nextToken()) - 1;
         int t = Integer.parseInt(st.nextToken()) - 1;
 
-        int[][] a = new int[m][m];
+        int[][] a = new int[m * 2][m * 2];
+        for (int i = 0; i < m; i++) {
+            a[i * 2][i * 2 + 1] = 1;
+        }
+        a[s * 2][s * 2 + 1] = MAX;
+        a[t * 2][t * 2 + 1] = MAX;
+
         for (int i = 0; i < n; i++) {
             st = new StringTokenizer(f.readLine());
-            int x = Integer.parseInt(st.nextToken());
-            int y = Integer.parseInt(st.nextToken());
-            a[x - 1][y - 1]++;
-            a[y - 1][x - 1]++;
+            int x = Integer.parseInt(st.nextToken()) - 1;
+            int y = Integer.parseInt(st.nextToken()) - 1;
+            a[x * 2 + 1][y * 2] = MAX;
+            a[y * 2 + 1][x * 2] = MAX;
         }
 
-        int[][] g = new int[m][m];
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < m; j++) {
+        int[][] g = new int[m * 2][m * 2];
+        for (int i = 0; i < m * 2; i++) {
+            for (int j = 0; j < m * 2; j++) {
                 g[i][j] = a[i][j];
             }
         }
-        int maxFlow = ek(m, s, t, g);
+        int maxFlow = ek(m * 2, s * 2, t * 2 + 1, g);
         out.println(String.valueOf(maxFlow));
 
         boolean[] chosenSpots = new boolean[m];
@@ -46,20 +53,20 @@ public class telecow {
                 continue;
             }
 
-            g = new int[m][m];
-            for (int i = 0; i < m; i++) {
-                if (i == k || chosenSpots[i]) {
-                    continue;
-                }
-                for (int j = 0; j < m; j++) {
-                    if (j == k || chosenSpots[j]) {
-                        continue;
-                    }
+            g = new int[m * 2][m * 2];
+            for (int i = 0; i < m * 2; i++) {
+                for (int j = 0; j < m * 2; j++) {
                     g[i][j] = a[i][j];
                 }
             }
+            for (int i = 0; i < m; i++) {
+                if (chosenSpots[i]) {
+                    g[i * 2][i * 2 + 1] = 0;
+                }
+            }
+            g[k * 2][k * 2 + 1] = 0;
 
-            int rm = ek(m, s, t, g);
+            int rm = ek(m * 2, s * 2, t * 2 + 1, g);
             if (maxFlow > rm) {
                 chosenSpots[k] = true;
                 maxFlow = rm;
