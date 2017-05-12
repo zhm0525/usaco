@@ -20,7 +20,7 @@ public class vans {
         StringTokenizer st = new StringTokenizer(f.readLine());
         int n = Integer.parseInt(st.nextToken());
 
-//        int[] g = new int[n + 1];
+//        int[] g = new int[n];
 //        g[0] = 0;
 //        g[1] = 1;
 //        for (int i = 2; i < n; i++) {
@@ -35,7 +35,7 @@ public class vans {
 //            s += g[i] * 2;
 //        }
 
-        BigInteger[] g = new BigInteger[n + 1];
+        BigInteger[] g = new BigInteger[n];
         g[0] = new BigInteger("0");
         g[1] = new BigInteger("1");
         for (int i = 2; i < n; i++) {
