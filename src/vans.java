@@ -5,6 +5,7 @@ TASK: vans
 */
 
 import java.io.*;
+import java.math.BigInteger;
 import java.util.*;
 
 public class vans {
@@ -19,46 +20,41 @@ public class vans {
         StringTokenizer st = new StringTokenizer(f.readLine());
         int n = Integer.parseInt(st.nextToken());
 
-        int s = 0;
+//        int[] g = new int[n + 1];
+//        g[0] = 0;
+//        g[1] = 1;
+//        for (int i = 2; i < n; i++) {
+//            for (int j = 1; j < i - 1; j++) {
+//                g[i] += g[j] * (i - 1 - j) * 2;
+//            }
+//            g[i] += g[i - 2] + 1;
+//        }
+//
+//        int s = 0;
+//        for (int i = 1; i < n; i++) {
+//            s += g[i] * 2;
+//        }
+
+        BigInteger[] g = new BigInteger[n + 1];
+        g[0] = new BigInteger("0");
+        g[1] = new BigInteger("1");
+        for (int i = 2; i < n; i++) {
+            g[i] = new BigInteger("0");
+            for (int j = 1; j < i - 1; j++) {
+                g[i] = g[i].add(g[j].multiply(BigInteger.valueOf((i - 1 - j) * 2)));
+            }
+            g[i] = g[i].add(g[i - 2]);
+            g[i] = g[i].add(BigInteger.valueOf(1));
+        }
+
+        BigInteger s = new BigInteger("0");
         for (int i = 1; i < n; i++) {
-            s += leftTop2leftBottom4(i);
+            s = s.add(g[i]);
         }
+        s = s.multiply(BigInteger.valueOf(2));
 
-        out.println(String.valueOf(s * 2));
+        out.println(s.toString());
         out.close();
-    }
-
-    private static int leftTop2leftBottom4(int n) {
-        if (n <= 0) {
-            return 0;
-        } else if (n == 1) {
-            return 1;
-        }
-
-        int s = leftTop2rightBottom3(n);
-        for (int i = 1; i < n - 1; i++) {
-            s += leftTop2leftBottom4(i) * (n - 1 - i);
-        }
-
-        // from 2
-        s += leftTop2leftBottom4(n - 2);
-
-        return s;
-    }
-
-    private static int leftTop2rightBottom3(int n) {
-        if (n <= 0) {
-            return 0;
-        } else if (n == 1) {
-            return 1;
-        }
-
-        int s = 1;
-        for (int i = 1; i < n - 1; i++) {
-            s += leftTop2rightBottom3(i) * (n - 1 - i);
-        }
-
-        return s;
     }
 
 }
