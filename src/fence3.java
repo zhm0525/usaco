@@ -21,6 +21,7 @@ public class fence3 {
 
         int minX = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE;
         int minY = Integer.MAX_VALUE, maxY = Integer.MIN_VALUE;
+        int sumX = 0, sumY = 0;
 
         List<Line> list = new ArrayList<>();
         for (int i = 0; i < n; i++) {
@@ -31,31 +32,71 @@ public class fence3 {
             int y2 = Integer.parseInt(st.nextToken());
             list.add(new Line(x1, y1, x2, y2));
 
-            minX = Integer.min(minX, Integer.min(x1, x2));
-            maxX = Integer.max(maxX, Integer.max(x1, x2));
-            minY = Integer.min(minY, Integer.min(y1, y2));
-            maxY = Integer.max(maxY, Integer.max(y1, y2));
+            minX = Math.min(minX, Math.min(x1, x2));
+            maxX = Math.max(maxX, Math.max(x1, x2));
+            minY = Math.min(minY, Math.min(y1, y2));
+            maxY = Math.max(maxY, Math.max(y1, y2));
+
+            sumX += x1 + x2;
+            sumY += y1 + y2;
         }
 
-        int mx = (minX + maxX) / 2;
-        int my = (minY + maxY) / 2;
+//        int mx = (minX + maxX) / 2;
+//        int my = (minY + maxY) / 2;
+        int mx = sumX / 2 / n;
+        int my = sumY / 2 / n;
         int dx = maxX - minX;
         int dy = maxY - minY;
 
+        double deltaX = Math.max(Math.max(0.3d * dx, 1d), 3d);
+        double deltaY = Math.max(Math.max(0.3d * dy, 1d), 3d);
+
         double s = Double.MAX_VALUE, x = 0d, y = 0d;
 
-        for (double xt = mx - 0.4d * dx; xt <= mx + 0.4d * dx; xt += 0.1d) {
-            for (double yt = my - 0.4d * dy; yt <= my + 0.4d * dy; yt += 0.1d) {
+//        for (double xt = mx - deltaX; xt <= mx + deltaX; xt += 0.1d) {
+//            for (double yt = my - deltaY; yt <= my + deltaY; yt += 0.1d) {
+//                double t = 0d;
+//                for (Line line : list) {
+//                    t += line.getDistance(xt, yt);
+//                    if (t >= s) {
+//                        break;
+//                    }
+//                }
+//                if (t < s) {
+//                    s = t;
+//                    x = xt;
+//                    y = yt;
+//                }
+//            }
+//        }
+
+        x = mx;
+        y = my;
+        s = 0d;
+        for (Line line : list) {
+            s += line.getDistance(x, y);
+        }
+
+        final double[][] d = {{0d, 0.1d}, {0d, -0.1d}, {0.1d, 0d}, {-0.1d, 0d}};
+
+        boolean find = false;
+        while (!find) {
+            int k = -1;
+            for (int i = 0; i < 4; i++) {
                 double t = 0d;
                 for (Line line : list) {
-                    t += line.getDistance(xt, yt);
+                    t += line.getDistance(x + d[i][0], y + d[i][1]);
                 }
                 if (t < s) {
                     s = t;
-                    x = xt;
-                    y = yt;
+                    k = i;
                 }
             }
+            if (k >= 0) {
+                x += d[k][0];
+                y += d[k][1];
+            }
+            find = k < 0;
         }
         out.println(String.format("%.1f", x) + " " + String.format("%.1f", y) + " " + String.format("%.1f", s));
         out.close();
