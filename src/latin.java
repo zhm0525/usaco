@@ -30,25 +30,51 @@ public class latin {
             r = r * i;
         }
 
-        search(1, 0);
+        search(1, 0, 0);
 
         out.println(String.valueOf(s));
         out.close();
     }
 
-    private static void search(int x, int y) {
+    private static void search(int x, int y, int rs) {
         if (x >= n - 1) {
             s += r;
             return;
         }
 
-        if (y >= n) {
-            search(x + 1, 0);
+        if (y >= n - 1) {
+            int i = (n - 1) * n / 2 - rs;
+            if (i != y && !row[x][i] && !column[y][i]) {
+                column[y][i] = true;
+                search(x + 1, 0, 0);
+                column[y][i] = false;
+            }
             return;
         }
 
         if (x == y) {
-            search(x, y + 1);
+            search(x, y + 1, rs);
+            return;
+        }
+
+        if (x == 1 && y == 0) {
+            int i = 1;
+            row[x][i] = true;
+            column[y][i] = true;
+            search(x, y + 1, rs + i);
+            row[x][i] = false;
+            column[y][i] = false;
+
+            i = 2;
+            if (i < n) {
+                long t = s;
+                row[x][i] = true;
+                column[y][i] = true;
+                search(x, y + 1, rs + i);
+                row[x][i] = false;
+                column[y][i] = false;
+                s = t + (s - t) * (n - 2);
+            }
             return;
         }
 
@@ -56,7 +82,7 @@ public class latin {
             if (i != y && !row[x][i] && !column[y][i]) {
                 row[x][i] = true;
                 column[y][i] = true;
-                search(x, y + 1);
+                search(x, y + 1, rs + i);
                 row[x][i] = false;
                 column[y][i] = false;
             }
